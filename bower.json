@@ -1,0 +1,21 @@
+{
+  "name": "knockout_tokenfield",
+  "version": "0.5.0",
+  "main": "build/knockout_tokenfield.min.js",
+  "ignore": [
+    "examples",
+    "ext",
+    "lib",
+    "spec",
+    "src",
+    "Gruntfile.js",
+    "package.json",
+    ".gitignore"
+  ],
+  "dependencies": {
+    "knockout": "~3.3.0",
+    "bootstrap-tokenfield": "~0.12.1",
+    "jqueryui": "~1.11.4",
+    "typeahead.js": "~0.10.1"
+  }
+}
