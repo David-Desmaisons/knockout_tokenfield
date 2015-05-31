@@ -19,20 +19,29 @@
                 $element.tokenfield('destroy');
             });
 
+            var options = allBindings.get('tokenfieldOptions'),
+                displayKey = value.displayKey;
 
-            $(element).tokenfield({
-            delimiter: ko.tokenfield[element.id].bindings['Delimiter'], 
-            allowEditing: false, 
-            createTokensOnBlur: true, 
-            typeahead: [null, {
-                name: element.id,
-                displayKey: ko.tokenfield[element.id].bindings['KeyDisplay'],
-                source: (function() {
-                }) }]
-            }); 
+            $element.data('tokenfield_ko_options',options);
+
+            function source(query,sync,async){
+
+            };
+
+            options.typeahead =[null,{displayKey:displayKey,source:source}];
+
+
+            $element.tokenfield(options); 
+            $('#myField').tokenfield('setTokens', 'blue,red,white');
         },
 
         update: function(element, valueAccessor, allBindingsAccessor, deprecated, bindingContext) {
+            var $element=$(element), options= $element.data('tokenfield_ko_options'),
+                value = ko.utils.unwrapObservable(valueAccessor()) || [], displayKey = options.displayKey;
+
+            $element.tokenfield('setTokens', $.map(value,function(el){
+                return {value:el, label:ko.utils.unwrapObservable(el[displayKey])};
+            }) );
         }
     };
     
