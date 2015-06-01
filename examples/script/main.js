@@ -2,7 +2,8 @@
 $( document ).ready(function() {
 
   var vm ={
-    tokens : ko.observableArray([{name:'David',id:2},{name:'Claudia',id:1},{name:'Mateus',id:3}])
+    tokens : ko.observableArray([{name:'David',id:2},{name:'Claudia',id:1},{name:'Mateus',id:3}]),
+    possibilities : [{name:'David',id:2},{name:'Claudia',id:1},{name:'Mateus',id:3},{name:'Amanda',id:0},{name:'Novo',id:5}]
 
   };
 

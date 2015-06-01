@@ -16,6 +16,6 @@
     "knockout": "~3.3.0",
     "jqueryui": "~1.11.4",
     "typeahead.js": "~0.10.1",
-    "bootstrap-tokenfield": "https://github.com/David-Desmaisons/bootstrap-tokenfield.git#25fac4830ccd565377e0aa4e03202884af390b82"
+    "bootstrap-tokenfield": "https://github.com/David-Desmaisons/bootstrap-tokenfield.git#value-as-object"
   }
 }

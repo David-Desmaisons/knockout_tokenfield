@@ -11,37 +11,89 @@
     }
 }(function(ko, $) {
 
+        function updater(state,cb){
+            if (state.updating)
+                return;
+
+            state.updating=true;
+            cb();
+            state.updating=false;
+        }
+
       ko.bindingHandlers.tokenfield = {
         init: function(element, valueAccessor, allBindings) {
-            var $element=$(element),  value = ko.utils.unwrapObservable(valueAccessor()) || {};
+            var $element=$(element),  value= valueAccessor(),
+                tokens = value.tokens, options = allBindings.get('tokenfieldOptions'), state ={updating:false},
+                display = options.display, tokenoptions = value.predefined, tokenFactory =value.tokenFactory || null ;
 
             ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
                 $element.tokenfield('destroy');
             });
 
-            var options = allBindings.get('tokenfieldOptions'),
-                displayKey = value.displayKey;
+
 
             $element.data('tokenfield_ko_options',options);
+            $element.data('tokenfield_ko_state',state);
 
-            function source(query,sync,async){
+            if (!tokenFactory){
+                var localsource = new Bloodhound({
+                    datumTokenizer: function(d) { return Bloodhound.tokenizers.whitespace(d.label);},
+                    queryTokenizer: Bloodhound.tokenizers.whitespace,
+                    local: $.map(tokenoptions,function(el){return {value:el,label:el[display]};})
+                });
 
-            };
+                localsource.initialize();
 
-            options.typeahead =[null,{displayKey:displayKey,source:source}];
+                options.typeahead =[options.typeahead || null,{displayKey:'label',source:localsource.ttAdapter()}];
+            }
 
+            $element.tokenfield(options)
+            .on('tokenfield:createtoken', function (e) {
+                if (state.updating)
+                    return true;
 
-            $element.tokenfield(options); 
-            $('#myField').tokenfield('setTokens', 'blue,red,white');
+                if (e.fromSelection)
+                        return true;
+
+                return false;
+            })
+            .on('tokenfield:createdtoken', function (e) {
+                updater(state,function(){
+                    var value = e.attrs.value;
+                    if (value){
+                        tokens.push(value);
+                        console.log(value);
+                    }
+                });
+            })
+            .on('tokenfield:edittoken', function (e) {
+            })
+            .on('tokenfield:removetoken', function (e) {
+                 updater(state,function(){
+                    tokens.splice($(e.relatedTarget).index(),1);
+                });
+            }).
+            on('tokenfield:sortedtoken', function (e) {
+                updater(state,function(){
+                    var element = tokens()[e.oldPosition];
+                    tokens.splice(e.oldPosition,1);
+                    tokens.splice(e.newPosition,0,element);
+                });
+            });
         },
 
         update: function(element, valueAccessor, allBindingsAccessor, deprecated, bindingContext) {
             var $element=$(element), options= $element.data('tokenfield_ko_options'),
-                value = ko.utils.unwrapObservable(valueAccessor()) || [], displayKey = options.displayKey;
+                value = ko.utils.unwrapObservable(valueAccessor()) || [], display = options.display;
 
-            $element.tokenfield('setTokens', $.map(value,function(el){
-                return {value:el, label:ko.utils.unwrapObservable(el[displayKey])};
-            }) );
+             console.log('update');
+
+            updater($element.data('tokenfield_ko_state'),function(){
+
+                $element.tokenfield('setTokens', $.map(value.tokens(),function(el){
+                    return {value:el, label:ko.utils.unwrapObservable(el[display])};
+                }) );
+            });
         }
     };
     
