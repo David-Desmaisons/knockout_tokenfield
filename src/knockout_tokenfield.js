@@ -30,10 +30,10 @@
                 $element.tokenfield('destroy');
             });
 
-
-
             $element.data('tokenfield_ko_options',options);
             $element.data('tokenfield_ko_state',state);
+
+            var typeaheadSource;
 
             if (!tokenFactory){
                 var localsource = new Bloodhound({
@@ -44,8 +44,16 @@
 
                 localsource.initialize();
 
-                options.typeahead =[options.typeahead || null,{displayKey:'label',source:localsource.ttAdapter()}];
+                typeaheadSource =localsource.ttAdapter();
             }
+            else{
+                typeaheadSource = function (query, syncResults, asyncResults){
+
+                };
+            }
+
+            options.typeahead =[options.typeahead || null,{displayKey:'label',source:typeaheadSource}];
+
 
             $element.tokenfield(options)
             .on('tokenfield:createtoken', function (e) {
