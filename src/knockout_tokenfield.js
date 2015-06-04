@@ -63,42 +63,48 @@
                     return true;
 
                 //set temp label
-                e.attrs.value = counterCount;
+               // e.attrs.value = counterCount;
 
-                var created = (function(count){
-                    return tokenFactory(e.attrs.label,function(res){
-                        $.each($element.tokenfield('getTokens'),function(index,element){
-                            if (element.value===count){
-                                if (res===null){
+                // var created = (function(count){
+                //     return tokenFactory(e.attrs.label,function(res){
+                //         $.each($element.tokenfield('getTokens'),function(index,element){
+                //             if (element.value===count){
+                //                 if (res===null){
 
-                                }
-                                else{
-                                    element.value=res;
-                                    element.label = res[display];
-                                }
-                            }
-                        });
-                    });
-                    })(counterCount++);
+                //                 }
+                //                 else{
+                //                     element.value=res;
+                //                     element.label = res[display];
+                //                 }
+                //             }
+                //         });
+                //     });
+                //     })(counterCount++);
 
-                if (created===null)
-                    e.preventDefault();
-                else if (typeof(created) != 'undefined'){
-                     e.attrs.value = created;
-                }
+                // if (created===null)
+                //     e.preventDefault();
+                // else if (typeof(created) != 'undefined'){
+                //      e.attrs.value = created;
+                // }
             })
             .on('tokenfield:createdtoken', function (e) {
                 updater(state,function(){
+
                     var value = e.attrs.value;
-                    if (value){
+
+                    if (state.editing){
+                        tokens.splice(state.editing.index,1,value);
+                        state.editing=null;
+                    }
+                    else{
                         tokens.push(value);
-                        console.log(value);
                     }
                 });
             })
             .on('tokenfield:editedtoken', function (e) {
             })
             .on('tokenfield:edittoken', function (e) {
+                state.editing={ attrs: e.attrs, index: $(e.relatedTarget).index()};
             })
             .on('tokenfield:removetoken', function (e) {
                  updater(state,function(){
