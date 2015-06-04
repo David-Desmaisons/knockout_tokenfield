@@ -79,10 +79,7 @@
                             }
                         });
                     });
-                    })(counterCount);
-
-                counterCount++;
-                               
+                    })(counterCount++);
 
                 if (created===null)
                     e.preventDefault();
