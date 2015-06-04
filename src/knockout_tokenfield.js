@@ -24,7 +24,9 @@
         init: function(element, valueAccessor, allBindings) {
             var $element=$(element),  value= valueAccessor(),
                 tokens = value.tokens, options = allBindings.get('tokenfieldOptions'), state ={updating:false},
-                display = options.display, tokenoptions = value.predefined, tokenFactory =value.tokenFactory || null ;
+                display = options.display, tokenoptions = value.predefined,
+                tokenFactory =value.tokenFactory || function(){return null;},
+                counterCount = 0, finder = options.finder, typeaheadSource;
 
             ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
                 $element.tokenfield('destroy');
@@ -33,9 +35,7 @@
             $element.data('tokenfield_ko_options',options);
             $element.data('tokenfield_ko_state',state);
 
-            var typeaheadSource;
-
-            if (!tokenFactory){
+            if (!finder){
                 var localsource = new Bloodhound({
                     datumTokenizer: function(d) { return Bloodhound.tokenizers.whitespace(d.label);},
                     queryTokenizer: Bloodhound.tokenizers.whitespace,
@@ -48,7 +48,9 @@
             }
             else{
                 typeaheadSource = function (query, syncResults, asyncResults){
-
+                    finder(query).then(function(val){
+                        asyncResults($.map(val,function(el){return {value:el,label:el[display]};}));
+                    });
                 };
             }
 
@@ -57,13 +59,36 @@
 
             $element.tokenfield(options)
             .on('tokenfield:createtoken', function (e) {
-                if (state.updating)
+                if ((state.updating) || (e.fromSelection))
                     return true;
 
-                if (e.fromSelection)
-                        return true;
+                //set temp label
+                e.attrs.value = counterCount;
 
-                return false;
+                var created = (function(count){
+                    return tokenFactory(e.attrs.label,function(res){
+                        $.each($element.tokenfield('getTokens'),function(index,element){
+                            if (element.value===count){
+                                if (res===null){
+
+                                }
+                                else{
+                                    element.value=res;
+                                    element.label = res[display];
+                                }
+                            }
+                        });
+                    });
+                    })(counterCount);
+
+                counterCount++;
+                               
+
+                if (created===null)
+                    e.preventDefault();
+                else if (typeof(created) != 'undefined'){
+                     e.attrs.value = created;
+                }
             })
             .on('tokenfield:createdtoken', function (e) {
                 updater(state,function(){
@@ -73,6 +98,8 @@
                         console.log(value);
                     }
                 });
+            })
+            .on('tokenfield:editedtoken', function (e) {
             })
             .on('tokenfield:edittoken', function (e) {
             })
