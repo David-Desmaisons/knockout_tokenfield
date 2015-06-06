@@ -25,8 +25,8 @@
             var $element=$(element),  value= valueAccessor(),
                 tokens = value.tokens, options = allBindings.get('tokenfieldOptions'), state ={updating:false},
                 display = options.display, tokenoptions = value.predefined,
-                tokenFactory =value.tokenFactory || function(){return null;},
-                counterCount = 0, finder = options.finder, typeaheadSource;
+                tokenFactory = value.tokenFactory, 
+                finder = options.finder, typeaheadSource;
 
             ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
                 $element.tokenfield('destroy');
@@ -62,30 +62,24 @@
                 if ((state.updating) || (e.fromSelection))
                     return true;
 
-                //set temp label
-               // e.attrs.value = counterCount;
+                var found=false;
+  
+                $.each(tokenoptions ||[], function(index,element){
+                    if (element[display]==e.attrs.label){
+                        e.attrs.value = element;
+                        found=true;
+                        return false;
+                    }
+                })
 
-                // var created = (function(count){
-                //     return tokenFactory(e.attrs.label,function(res){
-                //         $.each($element.tokenfield('getTokens'),function(index,element){
-                //             if (element.value===count){
-                //                 if (res===null){
+                if (found) return true;
 
-                //                 }
-                //                 else{
-                //                     element.value=res;
-                //                     element.label = res[display];
-                //                 }
-                //             }
-                //         });
-                //     });
-                //     })(counterCount++);
+                var created = tokenFactory(e.attrs.label);
 
-                // if (created===null)
-                //     e.preventDefault();
-                // else if (typeof(created) != 'undefined'){
-                //      e.attrs.value = created;
-                // }
+                if (!!created){
+                     e.attrs.value = created.value;
+                     e.attrs.label = created.label;
+                }
             })
             .on('tokenfield:createdtoken', function (e) {
                 updater(state,function(){
