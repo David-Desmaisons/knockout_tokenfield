@@ -1,29 +1,32 @@
 ;(function(factory) {
     //CommonJS
     if (typeof require === "function" && typeof exports === "object" && typeof module === "object") {
-        factory(require("knockout"), require("jQuery"), exports);
+        factory(require("knockout"), require("jQuery"), require("Async_Queue"), exports);
         //AMD
     } else if (typeof define === "function" && define.amd) {
-        define(["knockout", "jQuery", "exports"], factory);
+        define(["knockout", "jQuery", "Async_Queue", "exports"], factory);
         //normal script tag
     } else {
-        factory(ko, $);
+        factory(window.ko, window.$, window.Async_Queue);
     }
 }(function(ko, $) {
 
         function updater(state,cb){
-            if (state.updating)
-                return;
 
-            state.updating=true;
-            cb();
-            state.updating=false;
+            state.queue.enQueue( function(){
+                if (state.updating)
+                    return;
+
+                state.updating=true;
+                cb();
+                state.updating=false;
+            });
         }
 
       ko.bindingHandlers.tokenfield = {
         init: function(element, valueAccessor, allBindings) {
             var $element=$(element),  value= valueAccessor(),
-                tokens = value.tokens, options = allBindings.get('tokenfieldOptions'), state ={updating:false},
+                tokens = value.tokens, options = allBindings.get('tokenfieldOptions'), state ={updating:false, queue : new Async_Queue()},
                 display = options.display, tokenoptions = value.predefined,
                 tokenFactory = value.tokenFactory, 
                 finder = options.finder, typeaheadSource;
@@ -70,7 +73,7 @@
                         found=true;
                         return false;
                     }
-                })
+                });
 
                 if (found) return true;
 
@@ -115,12 +118,15 @@
         },
 
         update: function(element, valueAccessor, allBindingsAccessor, deprecated, bindingContext) {
-            var $element=$(element), options= $element.data('tokenfield_ko_options'),
+            var $element=$(element), options= $element.data('tokenfield_ko_options'),state = $element.data('tokenfield_ko_state'),
                 value = ko.utils.unwrapObservable(valueAccessor()) || [], display = options.display;
 
              console.log('update');
 
-            updater($element.data('tokenfield_ko_state'),function(){
+             if (state.updating)
+                    return;
+
+            updater(state,function(){
 
                 $element.tokenfield('setTokens', $.map(value.tokens(),function(el){
                     return {value:el, label:ko.utils.unwrapObservable(el[display])};
